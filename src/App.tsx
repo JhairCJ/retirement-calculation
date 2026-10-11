@@ -21,6 +21,33 @@ function initialRaw(): Record<NumericField, string> {
   return Object.fromEntries((Object.keys(labels) as NumericField[]).map(key => [key, String(DEFAULT_SCENARIO[key])])) as Record<NumericField, string>
 }
 
+const SETTINGS_KEY = 'horizonte.settings.v1'
+
+type SavedSettings = {
+  raw: Record<NumericField, string>
+  question: QuestionMode
+  goalMode: GoalMode
+  view: MoneyView
+}
+
+function loadSettings(): SavedSettings {
+  const defaults: SavedSettings = { raw: initialRaw(), question: DEFAULT_SCENARIO.question, goalMode: DEFAULT_SCENARIO.goalMode, view: 'real' }
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null')
+    if (!saved || typeof saved !== 'object') return defaults
+    const raw = saved.raw && typeof saved.raw === 'object' ? saved.raw : {}
+    for (const name of Object.keys(labels) as NumericField[]) {
+      if (typeof raw[name] === 'string' && raw[name].length <= 100) defaults.raw[name] = raw[name]
+    }
+    if (saved.question === 'required-income' || saved.question === 'target-age') defaults.question = saved.question
+    if (saved.goalMode === 'capital' || saved.goalMode === 'spending') defaults.goalMode = saved.goalMode
+    if (saved.view === 'real' || saved.view === 'nominal') defaults.view = saved.view
+  } catch {
+    // Storage may be unavailable or contain an older, invalid value.
+  }
+  return defaults
+}
+
 function parse(raw: Record<NumericField, string>, question: QuestionMode, goalMode: GoalMode): Scenario {
   const values = Object.fromEntries((Object.keys(labels) as NumericField[]).map(key => [key, raw[key].trim() === '' ? NaN : Number(raw[key])]))
   return { ...values, horizonAge: DEFAULT_SCENARIO.horizonAge, question, goalMode } as Scenario
@@ -163,10 +190,14 @@ function Results({ plan, scenario, view, setView }: { plan: Plan, scenario: Scen
 }
 
 export default function App() {
-  const [raw, setRaw] = useState<Record<NumericField, string>>(initialRaw)
-  const [question, setQuestion] = useState<QuestionMode>(DEFAULT_SCENARIO.question)
-  const [goalMode, setGoalMode] = useState<GoalMode>(DEFAULT_SCENARIO.goalMode)
-  const [view, setView] = useState<MoneyView>('real')
+  const [savedSettings] = useState(loadSettings)
+  const [raw, setRaw] = useState(savedSettings.raw)
+  const [question, setQuestion] = useState(savedSettings.question)
+  const [goalMode, setGoalMode] = useState(savedSettings.goalMode)
+  const [view, setView] = useState(savedSettings.view)
+  useEffect(() => {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ raw, question, goalMode, view })) } catch { /* Storage is optional. */ }
+  }, [raw, question, goalMode, view])
   const scenario = useMemo(() => parse(raw, question, goalMode), [raw, question, goalMode])
   const errors = useMemo(() => validateScenario(scenario), [scenario])
   const valid = Object.keys(errors).length === 0
@@ -184,7 +215,7 @@ export default function App() {
       <div className="workspace"><aside className="controls" aria-label="Ajustes del escenario"><div className="controls-heading"><div><p className="eyebrow">Tu escenario</p><h2>Ajusta el plan</h2></div><button type="button" className="reset-button" onClick={reset}>Restablecer</button></div>
         <fieldset className="mode-group"><legend>¿Qué quieres saber?</legend><div className="segmented"><button type="button" className={question === 'required-income' ? 'active' : ''} aria-pressed={question === 'required-income'} onClick={() => setQuestion('required-income')}>Ingreso necesario</button><button type="button" className={question === 'target-age' ? 'active' : ''} aria-pressed={question === 'target-age'} onClick={() => setQuestion('target-age')}>Edad de logro</button></div><p>«Edad de logro» es cuándo alcanzarías la meta de capital.</p></fieldset>
         <ControlDetails title="01 · Tu situación actual" initiallyOpen invalid={currentInvalid}><div className="field-grid">{input('currentAge')}{question === 'target-age' && input('monthlyIncome')}{input('monthlyExpenses')}{input('initialCapital')}</div></ControlDetails>
-        <ControlDetails title="02 · Supuestos de la proyección" invalid={assumptionsInvalid}><div className="field-grid">{input('salaryGrowth')}{input('salaryIntervalMonths')}{input('nominalReturn')}</div><p className="section-hint">Con {pct(scenario.inflation)} de inflación, el rendimiento equivale a {Number.isFinite(scenario.nominalReturn) && Number.isFinite(scenario.inflation) && scenario.inflation > -100 ? pct(realReturnRate(scenario.nominalReturn, scenario.inflation)) : '—'} anual en poder adquisitivo de hoy. La proyección se extiende hasta los 100 años.</p></ControlDetails>
+        <ControlDetails title="02 · Supuestos de la proyección" initiallyOpen invalid={assumptionsInvalid}><div className="field-grid">{input('salaryGrowth')}{input('salaryIntervalMonths')}{input('nominalReturn')}</div><p className="section-hint">Con {pct(scenario.inflation)} de inflación, el rendimiento equivale a {Number.isFinite(scenario.nominalReturn) && Number.isFinite(scenario.inflation) && scenario.inflation > -100 ? pct(realReturnRate(scenario.nominalReturn, scenario.inflation)) : '—'} anual en poder adquisitivo de hoy. La proyección se extiende hasta los 100 años.</p></ControlDetails>
         <ControlDetails title="03 · Tu objetivo" initiallyOpen invalid={goalInvalid}>
           <fieldset className="mode-group goal-group"><legend>Define la meta por</legend><div className="segmented"><button type="button" className={goalMode === 'capital' ? 'active' : ''} aria-pressed={goalMode === 'capital'} onClick={() => setGoalMode('capital')}>Capital</button><button type="button" className={goalMode === 'spending' ? 'active' : ''} aria-pressed={goalMode === 'spending'} onClick={() => setGoalMode('spending')}>Gasto al retirarte</button></div></fieldset>
           <div className="field-grid">{goalMode === 'capital' ? input('targetCapital') : input('retirementSpending')}{question === 'required-income' && input('targetAge')}{input('inflation')}{input('withdrawalRate')}</div>

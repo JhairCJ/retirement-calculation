@@ -29,8 +29,31 @@ with sync_playwright() as playwright:
         '03 · Tu objetivo',
     ]
     assert sections.nth(0).get_attribute('open') is not None
-    assert sections.nth(1).get_attribute('open') is None
+    assert sections.nth(1).get_attribute('open') is not None
     assert sections.nth(2).get_attribute('open') is not None
+
+    saved = browser.new_page(viewport={"width": 1100, "height": 800})
+    saved.goto('http://localhost:5173')
+    saved.locator('#monthlyExpenses').fill('3100')
+    saved.locator('#salaryGrowth').fill('7')
+    saved.get_by_role('button', name='Edad de logro').click()
+    saved.get_by_role('button', name='Gasto al retirarte').click()
+    saved.locator('#retirementSpending').fill('6200')
+    saved.get_by_role('button', name='Bs futuros', exact=True).click()
+    saved.reload()
+    assert saved.locator('#monthlyExpenses').input_value() == '3100'
+    assert saved.locator('#salaryGrowth').input_value() == '7'
+    assert saved.locator('#retirementSpending').input_value() == '6200'
+    assert saved.get_by_role('button', name='Edad de logro').get_attribute('aria-pressed') == 'true'
+    assert saved.get_by_role('button', name='Gasto al retirarte').get_attribute('aria-pressed') == 'true'
+    assert saved.get_by_role('button', name='Bs futuros', exact=True).get_attribute('aria-pressed') == 'true'
+    assert saved.locator('.control-details').nth(1).get_attribute('open') is not None
+    saved.get_by_role('button', name='Restablecer').click()
+    saved.reload()
+    assert saved.locator('#monthlyExpenses').input_value() == '2500'
+    assert saved.get_by_role('button', name='Ingreso necesario').get_attribute('aria-pressed') == 'true'
+    saved.close()
+
     sections.nth(0).locator('summary').click()
     assert sections.nth(0).get_attribute('open') is None
     sections.nth(0).locator('summary').click()
@@ -52,7 +75,6 @@ with sync_playwright() as playwright:
     desktop.locator('#inflation').fill('5')
     assert desktop.locator('.answer-card h2').inner_text() == initial_income
 
-    sections.nth(1).locator('summary').click()
     desktop.locator('#salaryIntervalMonths').fill('6')
     assert desktop.locator('.answer-card h2').inner_text() != initial_income
     desktop.locator('#salaryIntervalMonths').fill('12')

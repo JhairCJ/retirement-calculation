@@ -65,5 +65,11 @@
 - [x] 10.2 Quitar la ayuda redundante del rendimiento y el aviso de que el patrimonio no se agota; conservar el aviso cuando se proyecta agotamiento.
 - [x] 10.3 Validar pruebas, lint, compilación, OpenSpec y revisión funcional en escritorio y móvil.
 
+## 11. Persistencia de ajustes
+
+- [x] 11.1 Guardar y restaurar las entradas y selecciones del escenario en el almacenamiento local del navegador, con valores iniciales si no hay datos válidos.
+- [x] 11.2 Abrir inicialmente «Supuestos de la proyección» y comprobar recarga y «Restablecer» en navegador.
+- [x] 11.3 Ejecutar pruebas, lint, compilación y validación OpenSpec.
+
 
 

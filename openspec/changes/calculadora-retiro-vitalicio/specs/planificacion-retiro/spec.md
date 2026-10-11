@@ -130,7 +130,7 @@ El sistema SHALL presentar una visualización por edad del patrimonio, el umbral
 - **THEN** el sistema señala la edad aproximada de agotamiento y evita representar patrimonio negativo como dinero disponible
 
 ### Requirement: Jerarquía clara de la interfaz
-El sistema SHALL presentar la pregunta y luego las secciones plegables «Tu situación actual», «Supuestos de la proyección» y «Tu objetivo», en ese orden, sin repetir selectores de unidad para definir el capital. SHALL destacar junto al resultado principal el capital nominal necesario en la fecha de referencia, los años usados para ajustarlo y su equivalencia en Bs de hoy. En «Ingreso necesario», la fecha de referencia SHALL ser la edad objetivo; en «Edad de logro», SHALL ser la primera edad alcanzada o, si no se alcanza, los 100 años con una etiqueta explícita de que la meta sigue pendiente. La vista real o nominal de la trayectoria SHALL ser un control separado para explorar importes, no para definir la meta. Los detalles de sueldo, ahorro y trayectoria SHALL seguir a la respuesta principal en una secuencia legible en móvil y escritorio.
+El sistema SHALL presentar la pregunta y luego las secciones plegables «Tu situación actual», «Supuestos de la proyección» y «Tu objetivo», en ese orden, inicialmente abiertas, sin repetir selectores de unidad para definir el capital. SHALL conservar en el navegador las entradas numéricas, el modo de pregunta, el método de meta y la vista monetaria al recargar. «Restablecer» SHALL devolver esos ajustes a sus valores iniciales y conservar ese restablecimiento al recargar. SHALL destacar junto al resultado principal el capital nominal necesario en la fecha de referencia, los años usados para ajustarlo y su equivalencia en Bs de hoy. En «Ingreso necesario», la fecha de referencia SHALL ser la edad objetivo; en «Edad de logro», SHALL ser la primera edad alcanzada o, si no se alcanza, los 100 años con una etiqueta explícita de que la meta sigue pendiente. La vista real o nominal de la trayectoria SHALL ser un control separado para explorar importes, no para definir la meta. Los detalles de sueldo, ahorro y trayectoria SHALL seguir a la respuesta principal en una secuencia legible en móvil y escritorio.
 
 #### Scenario: Meta ajustada destacada
 - **WHEN** la persona tiene 22 años, elige retiro a los 42, meta de Bs 2.000.000 de hoy e inflación anual de 5%
@@ -139,6 +139,14 @@ El sistema SHALL presentar la pregunta y luego las secciones plegables «Tu situ
 #### Scenario: Meta pendiente al final del horizonte
 - **WHEN** la meta no se alcanza en «Edad de logro»
 - **THEN** la página distingue el capital nominal equivalente a la edad final de planificación de un logro real y mantiene visible el resultado «No se alcanza en el horizonte»
+
+#### Scenario: Ajustes tras recargar
+- **WHEN** la persona cambia valores y selecciones del escenario y recarga la página
+- **THEN** los mismos ajustes y la vista monetaria reaparecen; las tres secciones de controles comienzan abiertas
+
+#### Scenario: Restablecimiento persistente
+- **WHEN** la persona pulsa «Restablecer» y recarga la página
+- **THEN** ve los valores iniciales en lugar de los ajustes anteriores
 
 ### Requirement: Supuestos y límites visibles
 El sistema SHALL explicar que los resultados son escenarios hipotéticos, que el rendimiento y la inflación constantes no representan volatilidad real, que la tasa inicial de retiro no garantiza duración del capital y que el límite fijo de 100 años no predice la longevidad. SHALL mostrar de forma accesible que los ingresos son netos, los aumentos salariales ocurren al completar cada intervalo, los gastos se indexan con inflación y las aportaciones ocurren al fin de cada mes.

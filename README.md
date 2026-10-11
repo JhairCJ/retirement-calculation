@@ -10,6 +10,7 @@ npm run dev
 ```
 
 Abre la dirección que muestre Vite (normalmente `http://localhost:5173`). No requiere backend ni cuenta.
+Los ajustes se guardan en el navegador y se recuperan al recargar; «Restablecer» vuelve a los valores iniciales.
 
 ## Verificar
 
