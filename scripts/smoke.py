@@ -31,6 +31,7 @@ with sync_playwright() as playwright:
     assert sections.nth(0).get_attribute('open') is not None
     assert sections.nth(1).get_attribute('open') is not None
     assert sections.nth(2).get_attribute('open') is not None
+    assert desktop.locator('#age-select').count() == 0
 
     saved = browser.new_page(viewport={"width": 1100, "height": 800})
     saved.goto('http://localhost:5173')
@@ -121,6 +122,13 @@ with sync_playwright() as playwright:
     desktop.screenshot(path=str(OUTPUT / 'zoomed.png'), full_page=True)
     chart = desktop.locator('.chart-scroll svg')
     chart.scroll_into_view_if_needed()
+    controls = desktop.locator('.controls')
+    assert abs(controls.bounding_box()['y'] - 16) < 2
+    chart_y = chart.bounding_box()['y']
+    controls.evaluate('(element) => { element.scrollTop = element.scrollHeight }')
+    assert controls.evaluate('(element) => element.scrollTop') > 0
+    assert abs(chart.bounding_box()['y'] - chart_y) < 2
+    controls.evaluate('(element) => { element.scrollTop = 0 }')
     box = chart.bounding_box()
     assert box is not None
     x = box['x'] + box['width'] * 0.65
@@ -150,15 +158,18 @@ with sync_playwright() as playwright:
     assert 'Bs 2.400.000 de hoy' in desktop.locator('.goal-preview').inner_text()
     desktop.locator('#retirementSpending').fill('5000')
     desktop.screenshot(path=str(OUTPUT / 'spending-mode.png'), full_page=True)
-    desktop.locator('#age-select').focus()
+    chart = desktop.locator('.chart-scroll svg')
+    chart.focus()
+    selected_age = desktop.locator('.selected-unit').inner_text().split(' · ')[0]
     desktop.keyboard.press('ArrowRight')
+    assert desktop.locator('.selected-unit').inner_text().split(' · ')[0] != selected_age
     assert 'Bs 5.000' in desktop.locator('.selected-details').inner_text()
     assert 'Bs de hoy: importes futuros descontados' in desktop.locator('.selected-details').inner_text()
-    selected_age = desktop.locator('.age-selector label strong').inner_text()
+    selected_age = desktop.locator('.selected-unit').inner_text().split(' · ')[0]
     desktop.get_by_role('button', name='Bs futuros', exact=True).click()
     assert 'Bs 13.321' in desktop.locator('.selected-details').inner_text()
     assert 'Bs futuros: importes nominales' in desktop.locator('.selected-details').inner_text()
-    assert desktop.locator('.age-selector label strong').inner_text() == selected_age
+    assert desktop.locator('.selected-unit').inner_text().split(' · ')[0] == selected_age
     desktop.get_by_role('button', name='Restablecer').click()
     desktop.get_by_role('button', name='Bs futuros', exact=True).click()
     assert '5.306.595' in desktop.locator('.capital-focus').inner_text()

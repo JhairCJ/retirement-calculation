@@ -71,5 +71,11 @@
 - [x] 11.2 Abrir inicialmente «Supuestos de la proyección» y comprobar recarga y «Restablecer» en navegador.
 - [x] 11.3 Ejecutar pruebas, lint, compilación y validación OpenSpec.
 
+## 12. Exploración sin deslizador y panel independiente
+
+- [x] 12.1 Quitar el deslizador de edad y permitir recorrer la gráfica con las flechas del teclado además del cursor.
+- [x] 12.2 Dar al panel de ajustes un desplazamiento vertical propio y mantenerlo visible junto a los resultados en escritorio; conservar desplazamiento normal en móvil.
+- [x] 12.3 Verificar pruebas, lint, compilación, interacción en navegador y validación OpenSpec.
+
 
 
